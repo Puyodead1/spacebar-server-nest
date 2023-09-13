@@ -1,4 +1,4 @@
-import { VersioningType } from '@nestjs/common';
+import { VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { I18nValidationPipe } from 'nestjs-i18n';
@@ -8,11 +8,10 @@ import { I18nExceptionFilter } from './lib/I18nExceptionFilter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('/api');
+  app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: '9',
-    prefix: 'v',
+    defaultVersion: [VERSION_NEUTRAL, '9'],
   });
 
   app.useGlobalFilters(new I18nExceptionFilter());
