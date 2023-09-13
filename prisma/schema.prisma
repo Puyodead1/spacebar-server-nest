@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id                     String   @id
+  id                     String   @id @unique
   createdAt              DateTime @default(now())
   username               String
   discriminator          String   @default("0")
@@ -28,7 +28,7 @@ model User {
   accent_color           Int?
   locale                 String   @default("en-US")
   verified               Boolean  @default(false)
-  email                  String?
+  email                  String?  @unique
   phone                  String?
   premium_type           Int      @default(0)
   personal_connection_id String?
@@ -41,4 +41,6 @@ model User {
   has_bounced_email      Boolean? @default(false)
   password               String
   legacy_username        String?
+
+  @@map("users")
 }
