@@ -1,18 +1,78 @@
 import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as argon from 'argon2';
 import { I18nValidationException } from 'nestjs-i18n';
 import { PrismaService } from '../prisma/prisma.service';
 import { Snowflake } from '../utils/Snowflake';
-import { RegisterDto } from './dtos';
+import { LoginDto, RegisterDto } from './dtos';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
-  login() {
-    return { message: 'login' };
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
+  async login(data: LoginDto) {
+    // TODO: captcha
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: data.login,
+      },
+    });
+
+    if (!user)
+      throw new I18nValidationException([
+        {
+          property: 'login',
+          target: data,
+          value: data.login,
+          constraints: {
+            consent: 'common.field.INVALID_LOGIN',
+          },
+        },
+        {
+          property: 'password',
+          target: data,
+          value: data.password,
+          constraints: {
+            consent: 'common.field.INVALID_LOGIN',
+          },
+        },
+      ]);
+
+    // check password
+    const valid = await argon.verify(user.password, data.password);
+    if (!valid)
+      throw new I18nValidationException([
+        {
+          property: 'login',
+          target: data,
+          value: data.login,
+          constraints: {
+            consent: 'common.field.INVALID_LOGIN',
+          },
+        },
+        {
+          property: 'password',
+          target: data,
+          value: data.password,
+          constraints: {
+            consent: 'common.field.INVALID_LOGIN',
+          },
+        },
+      ]);
+
+    // TODO: email verification
+    // TODO: mfa
+    // TODO: undelete
+    // TODO: user settings
+
+    const token = await this.generateToken(user.id, user.email ?? undefined);
+    return { token };
   }
 
   async register(data: RegisterDto) {
+    // TODO: captcha
     if (!data.consent) {
       throw new I18nValidationException([
         {
@@ -27,7 +87,7 @@ export class AuthService {
     }
 
     // check for existing user
-    const existingUser = await this.prisma.user.findFirst({
+    const existingUser = await this.prisma.user.count({
       where: {
         email: data.email,
       },
@@ -101,11 +161,13 @@ export class AuthService {
       userData.discriminator = discriminator;
     }
 
-    const user = await this.prisma.user.create({
+    await this.prisma.user.create({
       data: userData,
     });
 
-    return user;
+    const token = await this.generateToken(userData.id, userData.email);
+
+    return { token };
   }
 
   async generateDiscriminator(username: string) {
@@ -123,5 +185,14 @@ export class AuthService {
       });
       if (!exists) return discriminator;
     }
+  }
+
+  async generateToken(id: string, email?: string) {
+    const iat = Math.floor(Date.now() / 1000);
+    return this.jwtService.signAsync({
+      sub: id,
+      iat,
+      email,
+    });
   }
 }

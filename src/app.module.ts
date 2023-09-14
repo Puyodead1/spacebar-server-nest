@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n';
 import * as path from 'path';
 import { AuthModule } from './auth/auth.module';
@@ -13,17 +14,6 @@ import { UserModule } from './user/user.module';
       isGlobal: true,
       load: [configuration],
     }),
-    // MikroOrmModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   inject: [ConfigService],
-    //   useFactory: (configService: ConfigService) => ({
-    //     entities: ['./dist/entities'],
-    //     entitiesTs: ['./src/entities'],
-    //     debug: process.env.ENV !== 'production',
-    //     autoLoadEntities: true,
-    //     ...configService.get('database'),
-    //   }),
-    // }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
@@ -31,6 +21,11 @@ import { UserModule } from './user/user.module';
         watch: true,
       },
       resolvers: [AcceptLanguageResolver],
+    }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET,
+      signOptions: { algorithm: 'HS256' },
     }),
     AuthModule,
     UserModule,

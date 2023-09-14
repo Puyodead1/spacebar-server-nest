@@ -19,7 +19,8 @@
     "DATE_OF_BIRTH_UNDERAGE": "You need to be 13 or older in order to use Discord.",
     "CONSENT_REQUIRED": "You must agree to the Terms of Service and Privacy Policy.",
     "EMAIL_ALREADY_REGISTERED": "Email is already registered.",
-    "USERNAME_TOO_MANY_USERS": "Too many users have this username, please try another."
+    "USERNAME_TOO_MANY_USERS": "Too many users have this username, please try another.",
+    "INVALID_LOGIN": "Login or password is invalid."
   },
   "body": {
     "INVALID_BODY": "Invalid Form Body",
