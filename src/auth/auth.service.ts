@@ -1,19 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Scope,
+} from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import * as argon from 'argon2';
 import { I18nValidationException } from 'nestjs-i18n';
 import { PrismaService } from '../prisma/prisma.service';
+import { verifyCaptcha } from '../utils/Captcha';
 import { Snowflake } from '../utils/Snowflake';
 import { LoginDto, RegisterDto } from './dtos';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class AuthService {
   constructor(
+    @Inject(REQUEST) private readonly request: Request,
     private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
   async login(data: LoginDto) {
-    // TODO: captcha
+    // headers is not a map
+    const headers = this.request.headers as unknown as Record<string, string>;
+    const captchaKey = headers['x-captcha-key'];
+
+    if (!captchaKey) {
+      throw new HttpException(
+        {
+          captcha_key: ['captcha-required'],
+          captcha_sitekey: '10000000-ffff-ffff-ffff-000000000001', // TODO: config
+          captcha_service: 'hcaptcha',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
+      const captchaResponse = await verifyCaptcha(captchaKey!);
+      if (!captchaResponse.success) {
+        throw new HttpException(
+          {
+            captcha_key: captchaResponse['error-codes'],
+            captcha_sitekey: '10000000-ffff-ffff-ffff-000000000001', // TODO: config
+            captcha_service: 'hcaptcha',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
     const user = await this.prisma.user.findFirst({
       where: {
         email: data.login,
@@ -72,7 +107,33 @@ export class AuthService {
   }
 
   async register(data: RegisterDto) {
-    // TODO: captcha
+    // headers is not a map
+    const headers = this.request.headers as unknown as Record<string, string>;
+    const captchaKey = headers['x-captcha-key'];
+
+    if (!captchaKey) {
+      throw new HttpException(
+        {
+          captcha_key: ['captcha-required'],
+          captcha_sitekey: '10000000-ffff-ffff-ffff-000000000001', // TODO: config
+          captcha_service: 'hcaptcha',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
+      const captchaResponse = await verifyCaptcha(captchaKey!);
+      if (!captchaResponse.success) {
+        throw new HttpException(
+          {
+            captcha_key: captchaResponse['error-codes'],
+            captcha_sitekey: '10000000-ffff-ffff-ffff-000000000001', // TODO: config
+            captcha_service: 'hcaptcha',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
     if (!data.consent) {
       throw new I18nValidationException([
         {
@@ -118,7 +179,7 @@ export class AuthService {
     };
 
     // TODO: configuration to toggle this
-    if (data.unique_username_registration) {
+    if (data.global_name) {
       // use pomelo system
       const count = await this.prisma.user.count({
         where: {

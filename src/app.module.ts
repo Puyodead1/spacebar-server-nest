@@ -6,6 +6,7 @@ import * as path from 'path';
 import { AuthModule } from './auth/auth.module';
 import configuration from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
+import { UniqueUsernameModule } from './unique-username/unique-username.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -30,6 +31,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     UserModule,
     PrismaModule,
+    UniqueUsernameModule,
   ],
   controllers: [],
   providers: [],

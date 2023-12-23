@@ -4,6 +4,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsNotIn,
+  IsOptional,
   IsString,
   Length,
   NotContains,
@@ -36,11 +37,14 @@ export class RegisterDto {
     message: i18nValidationMessage('common.field.BASE_TYPE_REQUIRED'),
   })
   @IsString({ message: i18nValidationMessage('common.field.BASE_TYPE_STRING') })
+  @ValidateIf((_, value) => value !== null)
   fingerprint: string;
   @IsString({ message: i18nValidationMessage('common.field.BASE_TYPE_STRING') })
   @ValidateIf((_, value) => value !== null)
   gift_code_sku_id: string | null;
   @IsString({ message: i18nValidationMessage('common.field.BASE_TYPE_STRING') })
+  @ValidateIf((_, value) => value !== null)
+  @IsOptional()
   global_name: string;
   @IsString({ message: i18nValidationMessage('common.field.BASE_TYPE_STRING') })
   @ValidateIf((_, value) => value !== null)
@@ -55,13 +59,6 @@ export class RegisterDto {
     ),
   })
   password: string;
-  @IsNotEmpty({
-    message: i18nValidationMessage('common.field.BASE_TYPE_REQUIRED'),
-  })
-  @IsBoolean({
-    message: i18nValidationMessage('common.field.BASE_TYPE_BOOLEAN'),
-  })
-  unique_username_registration: boolean;
   @IsNotEmpty({
     message: i18nValidationMessage('common.field.BASE_TYPE_REQUIRED'),
   })
